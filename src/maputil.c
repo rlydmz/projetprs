@@ -5,331 +5,184 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define DELIMITEUR -666
+#define DELIMITOR -666
 
 #include "../include/error.h"
 
-void diminuerHauteur(char* filename, int height, int diffHauteur){
+//Récupère et affiche sur la sortie standard la largeur
+//Du fichier passé en paramètre
+void getWidth(char *filename){
+
+  int mapWidth = 0;
 
   int fd = open(filename, O_RDONLY);
-  int fdTmp = open("tmp", O_WRONLY | O_CREAT | O_TRUNC, 0666);
-
-  int hauteurMap;
-  int hauteurTmp;
-  int largeurMap;
-  int nbObjects;
-
-  int delimiteur = DELIMITEUR;
-
-  read(fd, &hauteurMap, sizeof(int));
-  read(fd, &largeurMap, sizeof(int));
-  read(fd, &nbObjects, sizeof(int));
-  hauteurTmp = diffHauteur;
-
-
-  write(fdTmp, &height,sizeof(int));
-  write(fdTmp, &largeurMap,sizeof(int));
-  write(fdTmp, &nbObjects,sizeof(int));
-
-  int buffer;
-
-  //On lit le fichier tant qu'on ne rencontre pas le délimiteur
-  //On vérifie si les coordonnées du fichier source doivent être exportées
-  //Dans le fichier de destination
-  //SI oui on écrit la coordonnée avec sa Texture
-  //SINON on saute à la paire (x,y,texture) suivante
-  while(read(fd, &buffer, sizeof(int))!=0){
-      if(buffer == delimiteur){
-        write(fdTmp, &delimiteur, sizeof(int));
-        break;
-      }
-      else if(buffer>= hauteurTmp){
-        buffer = buffer - hauteurTmp;
-        write(fdTmp,&buffer, sizeof(int));
-        read(fd, &buffer, sizeof(int));
-        write(fdTmp,&buffer, sizeof(int));
-        read(fd, &buffer, sizeof(int));
-        write(fdTmp,&buffer, sizeof(int));
-
-      }
-      else{
-        lseek(fd, 8, SEEK_CUR);
-      }
-  }
-
-  //On le reste du fichier source dans le fichier de destination
-  //C'est à dire les informations des textures
-  while(read(fd, &buffer, sizeof(int))!=0){
-        write(fdTmp,&buffer, sizeof(int));
-  }
-
-
-  close(fd);
-  close(fdTmp);
-
-  remove(filename);
-
-
-  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-  fdTmp = open("tmp", O_RDONLY);
-
-  while(read(fdTmp, &buffer, sizeof(int))!=0){
-        write(fd,&buffer, sizeof(int));
-  }
-
-  close(fd);
-  close(fdTmp);
-
-  remove("tmp");
-
-}
-
-void augmenterHauteur(char* filename, int height, int diffHauteur){
-
-  int fd = open(filename, O_RDONLY);
-  int fdTmp = open("tmp", O_WRONLY | O_CREAT | O_TRUNC, 0666);
-
-  int hauteurMap;
-  int hauteurTmp;
-  int largeurMap;
-  int nbObjects;
-
-  int delimiteur = DELIMITEUR;
-
-  read(fd, &hauteurMap, sizeof(int));
-  read(fd, &largeurMap, sizeof(int));
-  read(fd, &nbObjects, sizeof(int));
-  hauteurTmp = diffHauteur;
-
-
-  write(fdTmp, &height,sizeof(int));
-  write(fdTmp, &largeurMap,sizeof(int));
-  write(fdTmp, &nbObjects,sizeof(int));
-
-  int buffer;
-
-  int x, y = 0;
-  int text = 1;
-
-  for(int i=0; i<diffHauteur; i++){
-
-    y = i;
-
-    x = 0;
-    write(fdTmp, &y, sizeof(int));
-    write(fdTmp, &x, sizeof(int));
-    write(fdTmp, &text, sizeof(int));
-
-    x = largeurMap-1;
-    write(fdTmp, &y, sizeof(int));
-    write(fdTmp, &x, sizeof(int));
-    write(fdTmp, &text, sizeof(int));
-
-  }
-
-  //On lit le fichier tant qu'on ne rencontre pas le délimiteur
-  //On vérifie si les coordonnées du fichier source doivent être exportées
-  //Dans le fichier de destination
-  //SI oui on écrit la coordonnée avec sa Texture
-  //SINON on saute à la paire (x,y,texture) suivante
-  while(read(fd, &buffer, sizeof(int))!=0){
-      if(buffer == delimiteur){
-        write(fdTmp, &delimiteur, sizeof(int));
-        break;
-      }
-      else{
-        buffer = buffer + hauteurTmp;
-        write(fdTmp,&buffer, sizeof(int));
-        read(fd, &buffer, sizeof(int));
-        write(fdTmp,&buffer, sizeof(int));
-        read(fd, &buffer, sizeof(int));
-        write(fdTmp,&buffer, sizeof(int));
-      }
-  }
-
-  //On le reste du fichier source dans le fichier de destination
-  //C'est à dire les informations des textures
-  while(read(fd, &buffer, sizeof(int))!=0){
-        write(fdTmp,&buffer, sizeof(int));
-  }
-
-
-  close(fd);
-  close(fdTmp);
-
-  remove(filename);
-
-
-  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-  fdTmp = open("tmp", O_RDONLY);
-
-  while(read(fdTmp, &buffer, sizeof(int))!=0){
-        write(fd,&buffer, sizeof(int));
-  }
-
-  close(fd);
-  close(fdTmp);
-
-  remove("tmp");
-
-}
-
-void diminuerLargeur(char* filename, int width, int diffLargeur){
-
-  int fd = open(filename, O_RDONLY);
-  int fdTmp = open("tmp", O_WRONLY | O_CREAT | O_TRUNC, 0666);
-
-  int height;
-  int nbObjects;
-
-  int delimiteur = DELIMITEUR;
-
-  read(fd, &height, sizeof(int));
-  lseek(fd, 4, SEEK_CUR);
-  read(fd, &nbObjects, sizeof(int));
-
-  int newWidth = width;
-
-  write(fdTmp, &height,sizeof(int));
-  write(fdTmp, &newWidth,sizeof(int));
-  write(fdTmp, &nbObjects,sizeof(int));
-
-  int buffer;
-  int largeurBuffer;
-
-  //On lit le fichier tant qu'on ne rencontre pas le délimiteur
-  //On vérifie si les coordonnées du fichier source doivent être exportées
-  //Dans le fichier de destination
-  //SI oui on écrit la coordonnée avec sa Texture
-  //SINON on saute à la paire (x,y,texture) suivante
-
-  while(read(fd, &buffer, sizeof(int))!=0){
-      if(buffer == delimiteur){
-        write(fdTmp, &delimiteur, sizeof(int));
-        break;
-      }
-      else{
-        read(fd, &largeurBuffer, sizeof(int));
-        if(largeurBuffer < newWidth-1){
-          write(fdTmp,&buffer, sizeof(int));
-          write(fdTmp,&largeurBuffer, sizeof(int));
-          read(fd, &buffer, sizeof(int));
-          write(fdTmp,&buffer, sizeof(int));
-        }
-      }
-      else{
-        lseek(fd, 8, SEEK_CUR);
-      }
-  }
-
-  //On le reste du fichier source dans le fichier de destination
-  //C'est à dire les informations des textures
-  while(read(fd, &buffer, sizeof(int))!=0){
-        write(fdTmp,&buffer, sizeof(int));
-  }
-
-
-  close(fd);
-  close(fdTmp);
-
-  remove(filename);
-
-
-  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-  fdTmp = open("tmp", O_RDONLY);
-
-  while(read(fdTmp, &buffer, sizeof(int))!=0){
-        write(fd,&buffer, sizeof(int));
-  }
-
-  close(fd);
-  close(fdTmp);
-
-  remove("tmp");
-
-}
-
-
-void modifyHeight(char* filename, int height){
-
-  int fd = open(filename, O_RDONLY);
-  int hauteurInitiale, diffHauteur = 0;
-  read(fd, &hauteurInitiale, sizeof(int));
-  close(fd);
-
-  diffHauteur = hauteurInitiale - height;
-
-  if(diffHauteur == 0){
-    exit_with_error("Hauteur inchangee \n");
-  }
-  else if(diffHauteur<0){
-    //Augmente la hauteur
-    diffHauteur *= -1;
-    augmenterHauteur(filename, height, diffHauteur);
-  }
-  else{
-    //Diminuer hauteur
-    diminuerHauteur(filename, height, diffHauteur);
-  }
-
-}
-
-void modifyWidth(char* filename, int width){
-
-  int fd = open(filename, O_RDONLY);
-  int largeurInitiale, diffLargeur = 0;
   lseek(fd, 4, SEEK_SET);
-  read(fd, &largeurInitiale, sizeof(int));
+
+  if(read(fd, &mapWidth, sizeof(int)) == -1){
+    exit_with_error("Echec de la lecture de la largeur de la carte dans le fichier");
+  }
+
   close(fd);
 
-  diffLargeur = largeurInitiale - width;
+  printf("Largeur de la carte du fichier %s : %d\n", filename, mapWidth);
 
-  if(diffLargeur == 0){
-    exit_with_error("Hauteur inchangee \n");
+}
+
+//Récupère et affiche sur la sortie standard la hauteur
+//Du fichier passé en paramètre
+void getHeight(char *filename){
+
+  int mapHeight = 0;
+
+  int fd = open(filename, O_RDONLY);
+
+  if(read(fd, &mapHeight, sizeof(int)) == -1){
+    exit_with_error("Echec de la lecture de la hauteur de la carte dans le fichier");
   }
-  else if(diffLargeur<0){
-    //Augmente la hauteur
-    diffLargeur *= -1;
-    augmenterLargeur(filename, width, diffLargeur);
+
+  close(fd);
+
+  printf("Hauteur de la carte du fichier %s : %d\n", filename, mapHeight);
+
+}
+
+//Récupère et affiche sur la sortie standard le nombre d'objets
+//Du fichier passé en paramètre
+void getObjects(char *filename){
+
+  int mapNbObjects = 0;
+
+  int fd = open(filename, O_RDONLY);
+  lseek(fd, 8, SEEK_SET);
+
+  if(read(fd, &mapNbObjects, sizeof(int)) == -1){
+    exit_with_error("Echec de la lecture du nombre d'objets de la carte dans le fichier");
+  }
+
+  close(fd);
+
+  printf("Nombre d'objets de la carte du fichier %s : %d\n", filename, mapNbObjects);
+
+}
+
+//Utilise les 3 fonctions permettant de récupérer et d'afficher
+//La largeur, la hauteur et le nombre d'objets de la carte du fichier passé
+//En paramètre et les affiche sur la sortie standard
+void getInfos(char *filename){
+
+  getWidth(filename);
+  getHeight(filename);
+  getObjects(filename);
+
+}
+
+void increaseWidth(char *filename, int width){
+
+    int fd = open(filename, O_RDONLY);
+    int fdTmp = open("tmp", O_WRONLY | O_CREAT | O_TRUNC, 0666);
+
+    int data = 0;
+    int newWidth = width;
+
+    //int delimitor = DELIMITOR;
+
+    read(fd, &data, sizeof(int));
+    write(fdTmp, &data, sizeof(int));
+
+    write(fdTmp, &newWidth, sizeof(int));
+
+    lseek(fd, 8, SEEK_SET);
+    read(fd, &data, sizeof(int));
+    write(fdTmp, &data, sizeof(int));
+
+    close(fd);
+    close(fdTmp);
+
+    while(read(fd, &data, sizeof(int))!=0){
+        if(buffer == delimiteur){
+          write(fdTmp, &delimiteur, sizeof(int));
+          break;
+        }
+        else{
+          read(fd, &largeurBuffer, sizeof(int));
+          if(largeurBuffer < newWidth-1){
+            write(fdTmp,&buffer, sizeof(int));
+            write(fdTmp,&largeurBuffer, sizeof(int));
+            read(fd, &buffer, sizeof(int));
+            write(fdTmp,&buffer, sizeof(int));
+          }
+        }
+        else{
+          lseek(fd, 8, SEEK_CUR);
+        }
+    }
+
+    fd = open("tmp", O_RDONLY);
+    for(int i=0; i<3; i++){
+      read(fd, &data, sizeof(int));
+      printf("%d\n", data);
+    }
+
+}
+
+void reduceWidth(){
+
+
+
+}
+
+void setWidth(char *filename, int newWidth){
+
+  int initialWidth, widthDiff = 0;
+
+  int fd = open(filename, O_RDONLY);
+  lseek(fd, 4, SEEK_SET);
+
+  if(read(fd, &initialWidth, sizeof(int)) == -1){
+    exit_with_error("Echec de la lecture de la largeur initiale de la carte dans le fichier");
+  }
+
+  close(fd);
+
+  widthDiff = initialWidth - newWidth;
+
+  if(widthDiff == 0){
+    exit_with_error("Hauteur inchangée");
+  }
+  else if(widthDiff < 0){
+    widthDiff *= -1;
+    increaseWidth(filename, newWidth);
   }
   else{
-    //Diminuer hauteur
-    diminuerLargeur(filename, width, diffLargeur);
+    reduceWidth();
   }
 
 }
 
 int main(int argc, char *argv[]){
 
-  int donnee = 0;
-  char *message;
-
-  int fd = open(argv[1], O_RDONLY);
-
-  if(strcmp(argv[2],"-getwidth") == 0){
-    lseek(fd, 4, SEEK_SET);
-    read(fd, &donnee, sizeof(int));
+  if(strcmp(argv[2],"--getwidth") == 0){
+    getWidth(argv[1]);
   }
-  else if(strcmp(argv[2],"-getheight") == 0){
-    lseek(fd, 0, SEEK_SET);
-    read(fd, &donnee, sizeof(int));
+  else if(strcmp(argv[2],"--getheight") == 0){
+    getHeight(argv[1]);
   }
-  else if(strcmp(argv[2],"-getobjects") == 0){
-    lseek(fd, 8, SEEK_SET);
-    read(fd, &donnee, sizeof(int));
+  else if(strcmp(argv[2],"--getobjects") == 0){
+    getObjects(argv[1]);
+  }
+  else if(strcmp(argv[2],"--getinfos") == 0){
+    getInfos(argv[1]);
   }
   else if(strcmp(argv[2],"-setwidth") == 0){
-    modifyWidth(argv[1], atoi(argv[3]));
+    setWidth(argv[1], atoi(argv[3]));
   }
+  /*
   else if(strcmp(argv[2],"-setheight") == 0){
     modifyHeight(argv[1], atoi(argv[3]));
   }
+  */
   else{
     exit_with_error("Mauvais paramètres :(\n");
   }
-
-  close(fd);
-
-  printf("%d\n", donnee);
 
 }
