@@ -270,6 +270,10 @@ void setWidth(char *filename, int newWidth){
   int fd = open(filename, O_RDONLY);
   lseek(fd, 4, SEEK_SET);
 
+  if(newWidth<16 || newWidth>1024){
+    exit_with_error("Echec lors du changement de la largeur de la carte. [16-1024]");
+  }
+
   if(read(fd, &initialWidth, sizeof(int)) == -1){
     exit_with_error("Echec de la lecture de la largeur initiale de la carte dans le fichier");
   }
@@ -465,6 +469,10 @@ void reduceHeight(char *filename, int height, int heightDiff){
 void setHeight(char *filename, int newHeight){
 
   int initialHeight, heightDiff = 0;
+
+  if(newHeight<12 || newHeight>20){
+    exit_with_error("Echec lors du changement de la largeur de la carte. [16-1024]");
+  }
 
   int fd = open(filename, O_RDONLY);
 
